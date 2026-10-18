@@ -13,7 +13,7 @@ use serde_json::{json, Value};
 use tauri::AppHandle;
 
 use crate::settings::Settings;
-use crate::{claude, local_chat, openai_compat, secrets};
+use crate::{claude, claude_cli, local_chat, openai_compat, secrets};
 
 pub const ANTHROPIC: &str = "anthropic";
 
@@ -169,6 +169,9 @@ pub fn model_for(settings: &Settings, provider: &str) -> String {
         .map(|m| m.trim().to_string())
         .filter(|m| !m.is_empty())
         .or_else(|| openai_compat::provider(provider).map(|p| p.default_model.to_string()))
+        // The CLI is given a model on every run, so it never falls back to
+        // whatever Claude Code itself was last set to.
+        .or_else(|| (provider == claude_cli::ID).then(|| claude_cli::DEFAULT_MODEL.to_string()))
         .unwrap_or_default()
 }
 
@@ -209,6 +212,9 @@ pub async fn send(
     let model = model_for(settings, provider);
     if provider == ANTHROPIC || provider.is_empty() {
         return claude::send(chat, &model, query, context).await;
+    }
+    if provider == claude_cli::ID {
+        return claude_cli::send(chat, &model, query, context).await;
     }
     if let Some(p) = openai_compat::provider(provider) {
         return openai_compat::send(chat, p, &model, query, context).await;
@@ -364,6 +370,18 @@ mod tests {
         assert_eq!(model_for(&s, "openai"), "gpt-x");
         assert_eq!(model_for(&s, "ollama"), "llama3.2");
         assert_eq!(model_for(&s, "anthropic"), "claude-haiku-4-5");
+    }
+
+    #[test]
+    fn the_cli_is_never_asked_for_an_empty_model() {
+        let mut s = Settings::default();
+        // Nothing saved: the CLI still gets a model to run, not "".
+        assert_eq!(model_for(&s, claude_cli::ID), claude_cli::DEFAULT_MODEL);
+        // The picker's choice wins, trimmed like the others.
+        s.chat_models.insert(claude_cli::ID.into(), " claude-sonnet-5 ".into());
+        assert_eq!(model_for(&s, claude_cli::ID), "claude-sonnet-5");
+        // Claude's own API model setting is untouched by it.
+        assert_eq!(model_for(&s, "anthropic"), claude::DEFAULT_MODEL);
     }
 
     #[test]

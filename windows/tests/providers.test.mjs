@@ -11,7 +11,7 @@ import { DEFAULT_SETTINGS } from "../src/core/state.ts";
 const settings = (over = {}) => ({ ...DEFAULT_SETTINGS, ...over });
 
 test("the ids and key names match the Rust side and the Mac", () => {
-  assert.deepEqual(PROVIDERS.map((p) => p.id), ["anthropic", "google", "openai", "openrouter", "ollama", "lmstudio", "custom"]);
+  assert.deepEqual(PROVIDERS.map((p) => p.id), ["anthropic", "claude-cli", "google", "openai", "openrouter", "ollama", "lmstudio", "custom"]);
   assert.equal(providerDef("google").key, "google-api-key");
   assert.equal(providerDef("openai").key, "openai-api-key");
   assert.equal(providerDef("openrouter").key, "openrouter-api-key");
@@ -36,9 +36,9 @@ test("Claude's model is the existing setting; the others are kept per provider",
 
 test("model servers show in the picker once connected, or while in use", () => {
   const ids = (s) => visibleProviders(s).map((p) => p.id);
-  assert.deepEqual(ids(settings()), ["anthropic", "google", "openai", "openrouter"]);
-  assert.deepEqual(ids(settings({ ollamaUrl: "http://127.0.0.1:11434" })), ["anthropic", "google", "openai", "openrouter", "ollama"]);
-  assert.deepEqual(ids(settings({ chatProvider: "custom" })), ["anthropic", "google", "openai", "openrouter", "custom"]);
+  assert.deepEqual(ids(settings()), ["anthropic", "claude-cli", "google", "openai", "openrouter"]);
+  assert.deepEqual(ids(settings({ ollamaUrl: "http://127.0.0.1:11434" })), ["anthropic", "claude-cli", "google", "openai", "openrouter", "ollama"]);
+  assert.deepEqual(ids(settings({ chatProvider: "custom" })), ["anthropic", "claude-cli", "google", "openai", "openrouter", "custom"]);
 });
 
 test("the saved model is kept when offered, else a sensible one is picked", () => {
@@ -49,6 +49,22 @@ test("the saved model is kept when offered, else a sensible one is picked", () =
   assert.equal(pickModel(providerDef("ollama"), ["llama3.2", "qwen"], ""), "llama3.2");
   assert.equal(pickModel(providerDef("openrouter"), ["a/b", "openrouter/auto"], "gone"), "openrouter/auto");
   assert.equal(pickModel(google, [], "x"), null);
+});
+
+test("Claude Code needs no key and no server address", () => {
+  const cli = providerDef("claude-cli");
+  assert.equal(cli.id, "claude-cli");
+  // It talks to the `claude` CLI, which carries its own sign-in: nothing to store.
+  assert.equal(cli.key, null);
+  assert.equal(cli.urlField, null);
+});
+
+test("Claude Code keeps its model like the other non-Anthropic providers", () => {
+  assert.equal(activeModel(settings({ chatProvider: "claude-cli" })), "claude-opus-5");
+  const s = withModel(settings({ chatProvider: "claude-cli" }), "claude-cli", "claude-sonnet-5");
+  assert.equal(activeModel(s), "claude-sonnet-5");
+  // Claude's own API model setting is left alone.
+  assert.equal(s.model, "claude-opus-5");
 });
 
 test("loopback hosts match net.rs", () => {

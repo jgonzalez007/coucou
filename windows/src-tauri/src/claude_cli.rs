@@ -228,6 +228,31 @@ mod tests {
         out
     }
 
+    /// Every message this module shows has a translation: a key that does not
+    /// match extra.json silently shows in English, which no test would catch.
+    #[test]
+    fn its_messages_are_translated() {
+        crate::i18n::set_for_test("fr");
+        for english in [
+            "Claude Code could not be started.",
+            "Claude Code gave no answer.",
+            "Claude Code reported an error.",
+            "Claude Code took too long to answer.",
+            "Claude Code was not found. Install it to chat with it.",
+            "No response text.",
+        ] {
+            assert_ne!(t(english), english, "untranslated: {english}");
+        }
+        // Reached through the parsing, not just looked up.
+        assert_eq!(answer(b"not json").unwrap_err(), "Claude Code n'a donné aucune réponse.");
+        assert_eq!(
+            answer(&out(json!({ "is_error": true }))).unwrap_err(),
+            "Claude Code a signalé une erreur."
+        );
+        crate::i18n::set_for_test("en");
+        assert_eq!(answer(b"not json").unwrap_err(), "Claude Code gave no answer.");
+    }
+
     #[test]
     fn the_session_to_resume_comes_from_the_last_answer() {
         assert_eq!(session_of(&[]), None);

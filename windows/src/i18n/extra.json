@@ -408,6 +408,61 @@
    "ru": "Классический токен с областью repo или детализированный (fine-grained) с доступом на чтение к Pull requests, Commit statuses и Actions.",
    "id": "Token klasik dengan cakupan repo, atau fine-grained dengan akses baca ke Pull requests, Commit statuses, dan Actions."
   },
+  "Claude Code could not be started.": {
+   "zh-Hans": "无法启动 Claude Code。",
+   "hi": "Claude Code शुरू नहीं हो सका।",
+   "es": "No se pudo iniciar Claude Code.",
+   "ar": "تعذّر تشغيل Claude Code.",
+   "fr": "Claude Code n'a pas pu démarrer.",
+   "bn": "Claude Code চালু করা যায়নি।",
+   "pt-BR": "O Claude Code não pôde ser iniciado.",
+   "ru": "Не удалось запустить Claude Code.",
+   "id": "Claude Code tidak bisa dijalankan."
+  },
+  "Claude Code gave no answer.": {
+   "zh-Hans": "Claude Code 没有给出回答。",
+   "hi": "Claude Code ने कोई जवाब नहीं दिया।",
+   "es": "Claude Code no dio ninguna respuesta.",
+   "ar": "لم يقدّم Claude Code أي إجابة.",
+   "fr": "Claude Code n'a donné aucune réponse.",
+   "bn": "Claude Code কোনো উত্তর দেয়নি।",
+   "pt-BR": "O Claude Code não deu nenhuma resposta.",
+   "ru": "Claude Code не дал ответа.",
+   "id": "Claude Code tidak memberi jawaban."
+  },
+  "Claude Code reported an error.": {
+   "zh-Hans": "Claude Code 报告了一个错误。",
+   "hi": "Claude Code ने एक त्रुटि बताई।",
+   "es": "Claude Code informó de un error.",
+   "ar": "أبلغ Claude Code عن خطأ.",
+   "fr": "Claude Code a signalé une erreur.",
+   "bn": "Claude Code একটি ত্রুটি জানিয়েছে।",
+   "pt-BR": "O Claude Code relatou um erro.",
+   "ru": "Claude Code сообщил об ошибке.",
+   "id": "Claude Code melaporkan kesalahan."
+  },
+  "Claude Code took too long to answer.": {
+   "zh-Hans": "Claude Code 回答得太久了。",
+   "hi": "Claude Code ने जवाब देने में बहुत समय लिया।",
+   "es": "Claude Code tardó demasiado en responder.",
+   "ar": "استغرق Claude Code وقتًا طويلاً للرد.",
+   "fr": "Claude Code a mis trop de temps à répondre.",
+   "bn": "Claude Code উত্তর দিতে অনেক বেশি সময় নিয়েছে।",
+   "pt-BR": "O Claude Code demorou demais para responder.",
+   "ru": "Claude Code отвечал слишком долго.",
+   "id": "Claude Code terlalu lama menjawab."
+  },
+  "Claude Code was not found. Install it to chat with it.": {
+   "zh-Hans": "找不到 Claude Code。安装后即可与它聊天。",
+   "hi": "Claude Code नहीं मिला। इससे बात करने के लिए इसे इंस्टॉल करें।",
+   "es": "No se encontró Claude Code. Instálalo para chatear con él.",
+   "ar": "لم يتم العثور على Claude Code. ثبّته للدردشة معه.",
+   "fr": "Claude Code est introuvable. Installe-le pour discuter avec lui.",
+   "bn": "Claude Code পাওয়া যায়নি। এর সাথে চ্যাট করতে এটি ইনস্টল করুন।",
+   "pt-BR": "O Claude Code não foi encontrado. Instale-o para conversar com ele.",
+   "ru": "Claude Code не найден. Установите его, чтобы общаться с ним.",
+   "id": "Claude Code tidak ditemukan. Pasang untuk mengobrol dengannya."
+  },
   "Claude declined this one.": {
    "zh-Hans": "Claude 拒绝了这个请求。",
    "hi": "Claude ने इसे मना कर दिया।",

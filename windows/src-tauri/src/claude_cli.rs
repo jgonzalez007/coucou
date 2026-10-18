@@ -142,6 +142,9 @@ fn run(prompt: &str, model: &str, resume: Option<&str>) -> Result<Vec<u8>, Strin
     {
         let mut kill = Command::new("taskkill");
         kill.args(["/T", "/F", "/PID", &child.id().to_string()]);
+        // It answered and exited on its own nearly every time: taskkill then
+        // prints "process not found", which is not ours to show.
+        kill.stdout(Stdio::null()).stderr(Stdio::null());
         platform::no_console(&mut kill);
         let _ = kill.status();
     }
@@ -179,6 +182,70 @@ pub async fn send(
         &reply.text,
     );
     Ok(ChatReply { text: reply.text })
+}
+
+/// The paths that only the real CLI can show: spawning it, reading what it
+/// actually prints, and resuming a session. Ignored like speech::with_models —
+/// they need Claude Code installed and signed in, and each one spends a
+/// request. Run them with `cargo test --lib -- --ignored`.
+#[cfg(test)]
+mod with_cli {
+    use super::*;
+
+    #[test]
+    #[ignore]
+    fn it_is_found_spawned_and_its_answer_read() {
+        let found = platform::claude_candidates();
+        assert!(!found.is_empty(), "no claude CLI on this machine");
+
+        let output = run("Reply with exactly: PROBE_OK", DEFAULT_MODEL, None).expect("the CLI ran");
+        let reply = answer(&output).expect("its answer parsed");
+        assert_eq!(reply.text, "PROBE_OK");
+        assert!(reply.session_id.is_some(), "no session came back to resume");
+    }
+
+    #[test]
+    #[ignore]
+    fn a_resumed_session_still_knows_the_conversation() {
+        let first = answer(&run("Remember the number 42. Reply with exactly: STORED", DEFAULT_MODEL, None).unwrap())
+            .expect("the first answer");
+        let session = first.session_id.expect("a session to resume");
+
+        let output = run(
+            "What number did I ask you to remember? Answer with the number only.",
+            DEFAULT_MODEL,
+            Some(&session),
+        )
+        .expect("the resumed run");
+        let second = answer(&output).expect("the second answer");
+        assert!(second.text.contains("42"), "the resumed session lost the conversation: {}", second.text);
+    }
+
+    /// The riskiest path in the change: chat.rs rebuilds the history from the
+    /// plain turns when another provider answered last, which drops the session
+    /// id — so prompt_with has to carry the transcript instead.
+    #[test]
+    #[ignore]
+    fn a_provider_switch_keeps_the_context() {
+        let chat = Chat::default();
+        let earlier = chat.begin(chat::ANTHROPIC);
+        chat.commit(
+            &earlier,
+            json!({ "role": "user", "content": "My favourite number is 17." }),
+            json!({ "role": "assistant", "content": "Noted: 17." }),
+            "My favourite number is 17.",
+            "Noted: 17.",
+        );
+
+        let reply = tauri::async_runtime::block_on(send(
+            &chat,
+            DEFAULT_MODEL,
+            "What is my favourite number? Answer with the number only.".into(),
+            None,
+        ))
+        .expect("the CLI answered");
+        assert!(reply.text.contains("17"), "the switch lost the context: {}", reply.text);
+    }
 }
 
 #[cfg(test)]

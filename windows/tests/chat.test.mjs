@@ -38,6 +38,7 @@ beforeEach(() => {
 const $ = (cls) => view.el.querySelector(cls);
 const chips = () => view.el.find(".picker-chip").map((c) => c.textContent);
 const models = () => view.el.find(".picker-model").map((m) => m.textContent);
+const chip = (name) => view.el.find(".picker-chip").find((c) => c.textContent === name);
 
 test("the model button shows the active provider's model", () => {
   assert.equal($(".model-name").textContent, "claude-opus-5");
@@ -54,7 +55,7 @@ test("a provider without a key is never asked for its models", async () => {
   $(".model-btn").fire("click");
   await flush();
   assert.ok($(".chat-body").classList.contains("picking"));
-  assert.deepEqual(chips(), ["Anthropic", "Google", "OpenAI", "OpenRouter"]);
+  assert.deepEqual(chips(), ["Anthropic", "Claude Code", "Google", "OpenAI", "OpenRouter"]);
   assert.deepEqual(sent("secret_present"), [{ key: "anthropic-api-key" }]);
   assert.deepEqual(sent("chat_models"), []);
   assert.match($(".picker-status").textContent, /No API key/);
@@ -83,7 +84,7 @@ test("switching provider saves it and asks the new provider only", async () => {
   $(".model-btn").fire("click");
   await flush();
   assert.deepEqual(sent("chat_models"), []);
-  view.el.find(".picker-chip")[1].fire("click");
+  chip("Google").fire("click");
   await flush();
   assert.equal(State.settings.chatProvider, "google");
   assert.deepEqual(sent("chat_models"), [{ provider: "google" }]);
@@ -91,6 +92,19 @@ test("switching provider saves it and asks the new provider only", async () => {
   assert.equal(State.settings.chatModels.google, "gemini-2.5-flash");
   assert.equal(sent("save_settings").at(-1).settings.chatModels.google, "gemini-2.5-flash");
   assert.deepEqual(models(), ["gemini-2.5-flash"]);
+});
+
+test("Claude Code is never asked for its models: it offers the one it runs", async () => {
+  answers.secret_present = false;
+  $(".model-btn").fire("click");
+  await flush();
+  chip("Claude Code").fire("click");
+  await flush();
+  assert.equal(State.settings.chatProvider, "claude-cli");
+  // chat.rs has no model list for the CLI; asking would only show an error.
+  assert.deepEqual(sent("chat_models"), []);
+  assert.deepEqual(models(), ["claude-opus-5"]);
+  assert.equal($(".picker-status"), null);
 });
 
 test("a local answer streams into one reply, then the finished text replaces it", async () => {

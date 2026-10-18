@@ -151,8 +151,15 @@ function buildPicker(onChange: () => void): Picker {
       drawModels(p, cached);
       return;
     }
+    // Claude Code has no model list to ask for (chat.rs asks only the APIs and
+    // the model servers): it offers the model it runs.
+    if (!p.key && !p.urlField) {
+      const model = activeModel(State.settings);
+      drawModels(p, [{ id: model, label: model }]);
+      return;
+    }
     // Nothing is asked of a provider that has no key yet.
-    if (p.key && !(await Bridge.secretPresent(p.key))) {
+    if (p.key &&!(await Bridge.secretPresent(p.key))) {
       if (ticket === request) status(t(STRINGS.noKey), true);
       return;
     }
